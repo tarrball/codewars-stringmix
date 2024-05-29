@@ -32,7 +32,54 @@ s2="Yes they are here! aaaaa fffff"
 mix(s1, s2) --> "=:aaaaaa/2:eeeee/=:fffff/1:tt/2:rr/=:hh"
 */
 
-export const mix = (s1: string, s2: string): string => {
+export const mix = (x: string, y: string): string => {
+  const countLetters = (s: string, char: string): number => {
+    return Array.from(s.replace(/[^a-z]/g, '').toLowerCase()).filter((f) => f === char).length;
+  };
+
+  const result = Array.from('abcdefghijklmnopqrstuvwxyz')
+    // Create count objects for each character
+    .map((character) => ({
+      character,
+      xCount: countLetters(x, character),
+      yCount: countLetters(y, character),
+    }))
+    // Filter out characters that don't appear enough in either string
+    .filter((countObj) => countObj.xCount > 1 || countObj.yCount > 1)
+    // Create objects for the input winners (x = '1', y = '2', both = '=')
+    .map((countObj) => ({
+      character: countObj.character,
+      count: Math.max(countObj.xCount, countObj.yCount),
+      winner: countObj.xCount > countObj.yCount ? 1 : countObj.xCount < countObj.yCount ? 2 : '=',
+    }))
+    // Sort by count, winner, and character.
+    .sort((a, b) => {
+      if (a.count !== b.count) {
+        return b.count - a.count;
+      }
+
+      if (a.winner === b.winner) {
+        return a.character.localeCompare(b.character);
+      }
+
+      if (a.winner === '=') {
+        return 1;
+      }
+
+      if (b.winner === '=') {
+        return -1;
+      }
+
+      return Number(a.winner) - Number(b.winner);
+    })
+    // Map each object to its string representation and join them together.
+    .map((countObj) => `${countObj.winner}:${countObj.character.repeat(countObj.count)}`)
+    .join('/');
+
+  return result;
+};
+
+export const mix_old = (s1: string, s2: string): string => {
   // loop through s1. and strings of each letter will be added to the s1 array of strings
   // can check that indexOf and lastIndexOf aren't the same and that the array doesn't include the char to determine if a char should be counted
   let s1Strings: string[] = [];
