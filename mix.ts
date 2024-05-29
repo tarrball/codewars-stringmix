@@ -31,52 +31,83 @@ s1="Are the kids at home? aaaaa fffff"
 s2="Yes they are here! aaaaa fffff"
 mix(s1, s2) --> "=:aaaaaa/2:eeeee/=:fffff/1:tt/2:rr/=:hh"
 */
-
 export const mix = (x: string, y: string): string => {
-  const countLetters = (s: string, char: string): number => {
-    return Array.from(s.replace(/[^a-z]/g, '').toLowerCase()).filter((f) => f === char).length;
-  };
-
   const result = Array.from('abcdefghijklmnopqrstuvwxyz')
-    // Create count objects for each character
-    .map((character) => ({
-      character,
-      xCount: countLetters(x, character),
-      yCount: countLetters(y, character),
-    }))
-    // Filter out characters that don't appear enough in either string
-    .filter((countObj) => countObj.xCount > 1 || countObj.yCount > 1)
-    // Create objects for the input winners (x = '1', y = '2', both = '=')
-    .map((countObj) => ({
-      character: countObj.character,
-      count: Math.max(countObj.xCount, countObj.yCount),
-      winner: countObj.xCount > countObj.yCount ? 1 : countObj.xCount < countObj.yCount ? 2 : '=',
-    }))
-    // Sort by count, winner, and character.
-    .sort((a, b) => {
-      if (a.count !== b.count) {
-        return b.count - a.count;
-      }
-
-      if (a.winner === b.winner) {
-        return a.character.localeCompare(b.character);
-      }
-
-      if (a.winner === '=') {
-        return 1;
-      }
-
-      if (b.winner === '=') {
-        return -1;
-      }
-
-      return Number(a.winner) - Number(b.winner);
-    })
-    // Map each object to its string representation and join them together.
-    .map((countObj) => `${countObj.winner}:${countObj.character.repeat(countObj.count)}`)
+    .map((character) => createCountObjets(x, y, character))
+    .filter((countObj) => filterLowCountObjects(countObj))
+    .map((countObj) => createWinnerObjects(countObj))
+    .sort((a, b) => sortWinnerObjs(a, b))
+    .map((countObj) => createStringRepresentation(countObj))
     .join('/');
 
   return result;
+};
+
+const countLetters = (s: string, char: string): number => {
+  return Array.from(s.replace(/[^a-z]/g, '').toLowerCase()).filter((f) => f === char).length;
+};
+
+const createCountObjets = (
+  x: string,
+  y: string,
+  character: string
+): { character: string; xCount: number; yCount: number } => {
+  return {
+    character,
+    xCount: countLetters(x, character),
+    yCount: countLetters(y, character),
+  };
+};
+
+const filterLowCountObjects = (countObj: { xCount: number; yCount: number }): boolean => {
+  return countObj.xCount > 1 || countObj.yCount > 1;
+};
+
+const createWinnerObjects = (countObj: {
+  xCount: number;
+  yCount: number;
+  character: string;
+}): {
+  character: string;
+  count: number;
+  winner: number | '=' | string;
+} => {
+  return {
+    character: countObj.character,
+    count: Math.max(countObj.xCount, countObj.yCount),
+    winner: countObj.xCount > countObj.yCount ? 1 : countObj.xCount < countObj.yCount ? 2 : '=',
+  };
+};
+
+const sortWinnerObjs = (
+  a: { count: number; winner: number | '=' | string; character: string },
+  b: { count: number; winner: number | '=' | string; character: string }
+): number => {
+  if (a.count !== b.count) {
+    return b.count - a.count;
+  }
+
+  if (a.winner === b.winner) {
+    return a.character.localeCompare(b.character);
+  }
+
+  if (a.winner === '=') {
+    return 1;
+  }
+
+  if (b.winner === '=') {
+    return -1;
+  }
+
+  return Number(a.winner) - Number(b.winner);
+};
+
+const createStringRepresentation = (countObj: {
+  winner: number | '=' | string;
+  character: string;
+  count: number;
+}): string => {
+  return `${countObj.winner}:${countObj.character.repeat(countObj.count)}`;
 };
 
 export const mix_old = (s1: string, s2: string): string => {
